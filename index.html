@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<!-- Force latest IE rendering engine or ChromeFrame if installed -->
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><![endif]-->
+<meta charset="utf-8">
+<title>jQuery File Upload Demo - Basic version</title>
+<!-- Bootstrap styles -->
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<!-- Generic page styles -->
+<link rel="stylesheet" href="css/style.css">
+<!-- CSS to style the file input field as button and adjust the Bootstrap progress bars -->
+<link rel="stylesheet" href="css/jquery.fileupload.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>PAN Card Image Upload</h1>
+    
+    <!-- The fileinput-button span is used to style the file input field as button -->
+
+    <span class="btn btn-success fileinput-button">
+        <i class="glyphicon glyphicon-plus"></i>
+        <span>Select PAN...</span> 
+        <!-- The file input field used as target for the file upload widget -->
+        <!--input id="fileupload" type="file" name="files[]" multiple-->
+        <input id="fileupload" type="file" name="files">   
+    </span>
+    (Support File:: pdf, tif/tiff, jpg/jpeg, bmp, gif) (Size: 5MB)
+    <br>
+    <br>
+    <!-- The global progress bar -->
+    <div id="progress" class="progress">
+        <div class="progress-bar progress-bar-success"></div>
+    </div>
+
+    <div id="msg" class="msg"></div>
+    <!-- The container for the uploaded files -->
+    <!--div id="files" class="files"></div-->
+    
+    <br>
+
+    <form action="" method="post">
+      First name:<br>
+      <input type="text" name="office" value="">
+      <br>
+      Last name:<br>
+      <input type="text" name="email" value="">
+      <br><br>
+      <input type="submit" value="Submit" id="sbmtBttn">
+    </form>
+    
+
+
+</div>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
+<script src="js/vendor/jquery.ui.widget.js"></script>
+<!-- The Load Image plugin is included for the preview images and image resizing functionality -->
+<script src="https://blueimp.github.io/JavaScript-Load-Image/js/load-image.all.min.js"></script>
+<!-- The Canvas to Blob plugin is included for image resizing functionality -->
+<script src="https://blueimp.github.io/JavaScript-Canvas-to-Blob/js/canvas-to-blob.min.js"></script>
+<!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+<script src="js/jquery.iframe-transport.js"></script>
+<!-- The basic File Upload plugin -->
+<script src="js/jquery.fileupload.js"></script>
+<!-- The File Upload processing plugin -->
+<script src="js/jquery.fileupload-process.js"></script>
+<!-- The File Upload image preview & resize plugin -->
+<script src="js/jquery.fileupload-image.js"></script>
+<!-- https://github.com/blueimp/jQuery-File-Upload/wiki/Options -->
+<script>
+/*jslint unparam: true */
+/*global window, $ */
+$(function () {
+    /*
+    First, strict mode makes it impossible to accidentally create global variables. In normal JavaScript mistyping a variable in an assignment creates a new property on the global object and continues to "work" (although future failure is possible: likely, in modern JavaScript). Assignments which would accidentally create global variables instead throw in strict mode:
+    */
+    'use strict';
+    // Change this to the location of your server-side upload handler:
+    var url = 'server/';
+
+    $('#fileupload')
+    .bind('fileuploadprocessstart', function (e) {
+        /* ... */
+        //$('#fileupload').addClass('btn btn-primary').prop('disabled', true);
+        $('#fileupload').prop('disabled', true);
+        $('#progress .progress-bar').css('width', '0%');
+    })
+    .bind('fileuploadprocess', function (e, data) {
+        /* ... */
+        $('#msg').html('Uploading PAN Image...');
+    })
+    .bind('fileuploadprocessdone', function (e, data) {
+        /* ... */
+        $('#msg').html('Processing PAN Image...');
+    })
+    .bind('fileuploadprocessfail', function (e, data) {
+        /* ... */
+        $('#fileupload').prop('disabled', false);
+        $('#msg').html('Uploading PAN Image Fail!');
+        //console.log("4")
+    })
+    .bind('fileuploadprocessalways', function (e, data) {
+        /* ... */
+        //console.log("5")
+    })
+    .bind('fileuploadprocessstop', function (e) {
+        /* ... */
+        //console.log("6")
+    })   
+    .fileupload({
+        url: url,
+        dataType: 'json',
+        acceptFileTypes: /(\.|\/)(pdf|tiff?|jpe?g|bmp|gif)$/i,
+        maxFileSize: 500000, //5MB             
+        // Enable image resizing, except for Android and Opera,
+        // which actually support image resizing, but fail to
+        // send Blob objects via XHR requests:
+        //disableImageResize: /Android(?!.*Chrome)|Opera/
+        //    .test(window.navigator && navigator.userAgent),
+        //imageMaxWidth: 2000,
+        //imageMaxHeight: 2000,
+        //imageCrop: false, // Force cropped images
+        done: function (e, data) {
+            console.log(data.result.files)
+            $.each(data.result.files, function (index, file) {
+                if(typeof file.error === "undefined") {
+                    if(file.panData.status) {
+                        $('#msg').html('Processed PAN Card Image/File successfully!');
+                        var lines = [];
+                        $.each(file.panData.text.split(/\n/), function(i, line){
+                            if(line){
+                                var pattern = /(\b[A-Z]{2}[A-Z0-9 ]+\b)|((3[01]|[12][0-9]|0[1-9])([\/]|[-])(1[0-2]|0[1-9])([\/]|[-])[0-9]{4})|Permanent Account Number/;
+                                if(pattern.test($.trim(line))){
+                                    lines.push($.trim(line));
+                                }
+                            }
+                        });
+                        //console.log(lines);
+                        //New PAN Card Check
+                        var indexPANValue = $.inArray( "Permanent Account Number", lines );
+                        var indexITDValue = $.inArray( "INCOME TAX DEPARTMENT", lines );
+
+                        //Old PAN Card Check
+                        var indexOLDPANValue = $.inArray( "/PERMANENT ACCOUNT NUMBER", lines );
+
+                        if(indexPANValue !== -1){ //New PAN Card Image
+                            console.log(lines[indexPANValue-3]);
+                            console.log(lines[indexPANValue-2]);
+                            console.log(lines[indexPANValue-1]);
+                            console.log(lines[indexPANValue+1]);
+                            $('#fileupload').prop('disabled', false);
+                        } else if (indexOLDPANValue !== -1){ //Old PAN Card Image
+                            console.log(lines[indexOLDPANValue+1]);
+                            console.log(lines[indexOLDPANValue+3]);
+                            console.log(lines[indexOLDPANValue+6]);
+                            console.log(lines[indexOLDPANValue+8]);
+                            $('#fileupload').prop('disabled', false);
+                        } else {
+                            $('#fileupload').prop('disabled', false);
+                            $('#progress .progress-bar').css('width', '0%');
+                            $('#msg').html('Take re-snapshot and then upload or scan n upload PAN again');
+                        }
+                    } else {
+                        $('#fileupload').prop('disabled', false);
+                        $('#progress .progress-bar').css('width', '0%');
+                        $('#msg').html(file.panData.error);
+                    }
+                } else {
+                    $('#fileupload').prop('disabled', false);
+                    $('#progress .progress-bar').css('width', '0%');
+                    $('#msg').html('Fail to upload File...');
+                } 
+
+            });
+        },
+        progressall: function (e, data) {
+            var progress = parseInt(data.loaded / data.total * 100, 10);
+            $('#progress .progress-bar').css('width', progress + '%');
+        }
+    }).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+});
+</script>
+</body>
+</html>

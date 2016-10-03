@@ -1,0 +1,32 @@
+https://github.com/aguidrevitch/jquery-file-upload-middleware
+
+options = {
+    tmpDir: __dirname + '/tmp', // tmp dir to upload files to
+    uploadDir: __dirname + '/public/files', // actual location of the file
+    uploadUrl: '/files/', // end point for delete route 
+    maxPostSize: 11000000000, // 11 GB
+    minFileSize: 1,
+    maxFileSize: 10000000000, // 10 GB
+    acceptFileTypes: /.+/i,
+    inlineFileTypes: /\.(gif|jpe?g|png)/i,
+    imageTypes:  /\.(gif|jpe?g|png)/i,
+    copyImgAsThumb : true, // required
+    imageVersions :{
+        maxWidth : 200,
+        maxHeight : 200
+    },
+    accessControl: {
+        allowOrigin: '*',
+        allowMethods: 'OPTIONS, HEAD, GET, POST, PUT, DELETE',
+        allowHeaders: 'Content-Type, Content-Range, Content-Disposition'
+    },
+    storage : {
+        type : 'local', // local or aws
+        aws : {
+            accessKeyId :  'xxxxxxxxxxxxxxxxx', // required if aws
+            secretAccessKey : 'xxxxxxxxxxxxxxxxxxxxxxx', // required if aws
+            region : 'us-west-2', //make sure you know the region, else leave this option out
+            bucketName : 'xxxxxxxxx' // required if aws
+        }
+    }
+};
