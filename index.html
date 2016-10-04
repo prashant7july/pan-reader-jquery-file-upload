@@ -27,6 +27,8 @@
         <input id="fileupload" type="file" name="files">   
     </span>
     (Support File:: pdf, tif/tiff, jpg/jpeg, bmp, gif) (Size: 5MB)
+    <!--Pre-requisite:: Set files/thumbnail folder's permission 777-->
+
     <br>
     <br>
     <!-- The global progress bar -->
@@ -41,11 +43,11 @@
     <br>
 
     <form action="" method="post">
-      First name:<br>
+      Office name:<br>
       <input type="text" name="office" value="">
       <br>
-      Last name:<br>
-      <input type="text" name="email" value="">
+      Address:<br>
+      <input type="text" name="address" value="">
       <br><br>
       <input type="submit" value="Submit" id="sbmtBttn">
     </form>
@@ -78,7 +80,7 @@ $(function () {
     */
     'use strict';
     // Change this to the location of your server-side upload handler:
-    var url = 'server/';
+    var url = 'server/index.php';
 
     $('#fileupload')
     .bind('fileuploadprocessstart', function (e) {
@@ -117,11 +119,16 @@ $(function () {
         // Enable image resizing, except for Android and Opera,
         // which actually support image resizing, but fail to
         // send Blob objects via XHR requests:
-        //disableImageResize: /Android(?!.*Chrome)|Opera/
-        //    .test(window.navigator && navigator.userAgent),
-        //imageMaxWidth: 2000,
-        //imageMaxHeight: 2000,
-        //imageCrop: false, // Force cropped images
+        disableImageResize: /Android(?!.*Chrome)|Opera/
+              .test(window.navigator && navigator.userAgent),
+        imageMaxWidth: 2000,
+        imageMaxHeight: 2000,
+        imageCrop: false, // Force cropped images
+        //image_library: 1,
+        //imageVersions :{
+        //    maxWidth : 200,
+        //    maxHeight : 200
+        //},
         done: function (e, data) {
             console.log(data.result.files)
             $.each(data.result.files, function (index, file) {
@@ -131,7 +138,7 @@ $(function () {
                         var lines = [];
                         $.each(file.panData.text.split(/\n/), function(i, line){
                             if(line){
-                                var pattern = /(\b[A-Z]{2}[A-Z0-9 ]+\b)|((3[01]|[12][0-9]|0[1-9])([\/]|[-])(1[0-2]|0[1-9])([\/]|[-])[0-9]{4})|Permanent Account Number/;
+                                var pattern = /(\b[A-Z]{2}[A-Z0-9 ]+\b)|((3[01]|[12][0-9]|0[1-9])([\/]|[-]|[A-Z0-9])(1[0-2]|0[1-9])([\/]|[-]|[A-Z0-9])[0-9]{4})|Permanent Account Number/;
                                 if(pattern.test($.trim(line))){
                                     lines.push($.trim(line));
                                 }
@@ -146,16 +153,97 @@ $(function () {
                         var indexOLDPANValue = $.inArray( "/PERMANENT ACCOUNT NUMBER", lines );
 
                         if(indexPANValue !== -1){ //New PAN Card Image
-                            console.log(lines[indexPANValue-3]);
-                            console.log(lines[indexPANValue-2]);
-                            console.log(lines[indexPANValue-1]);
-                            console.log(lines[indexPANValue+1]);
+
+                            //Person Name        
+                            //console.log(lines[indexPANValue-3]);
+                            var personName = lines[indexPANValue-3];
+                            var pattern = /[a-z0-9']+/;
+                            if(pattern.test(personName)){
+                                console.log(personName+" (Not validate)");
+                            } else {
+                                console.log(personName);                               
+                            }                            
+
+                            //Father Name
+                            //console.log(lines[indexPANValue-2]);
+                            var fatherName = lines[indexPANValue-2]  ;
+                            var pattern = /[a-z0-9']+/;
+                            if(pattern.test(fatherName)){
+                                console.log(fatherName+" (Not validate)");
+                            } else {
+                                console.log(fatherName);
+                            }                            
+                            
+                            //DOB
+                            //console.log(lines[indexPANValue-1]);
+                            var dateOfBirth = lines[indexPANValue-1] ;
+                            var pattern = /((3[01]|[12][0-9]|0[1-9])([\/]|[-])(1[0-2]|0[1-9])([\/]|[-])[0-9]{4})/;
+                            if(pattern.test(dateOfBirth)){
+                                console.log(dateOfBirth);
+                            } else {
+                                console.log(dateOfBirth+" (Not validate)");
+                            }                           
+
+                            //PAN Number
+                            //console.log(lines[indexPANValue+1]);
+                            var panNumber = lines[indexPANValue+1] ;
+                            var pattern = /[A-Z]{5}[0-9]{4}[A-Z]{1}/;
+                            if(pattern.test(panNumber)){
+                                console.log(panNumber);  
+                            } else { 
+                                console.log(panNumber+"(Not validate)");                          
+                            }                            
+
+
                             $('#fileupload').prop('disabled', false);
                         } else if (indexOLDPANValue !== -1){ //Old PAN Card Image
-                            console.log(lines[indexOLDPANValue+1]);
-                            console.log(lines[indexOLDPANValue+3]);
-                            console.log(lines[indexOLDPANValue+6]);
-                            console.log(lines[indexOLDPANValue+8]);
+
+                            //console.log(lines[indexOLDPANValue+1]);//PAN Number
+                            //console.log(lines[indexOLDPANValue+3]);//Name
+                            //console.log(lines[indexOLDPANValue+6]);//Father Name
+                            //console.log(lines[indexOLDPANValue+8]);//DOB
+
+                            //PAN Number
+                            //console.log(lines[indexOLDPANValue+1]);
+                            var panNumber = lines[indexOLDPANValue+1] ;
+                            var pattern = /[A-Z]{5}[0-9]{4}[A-Z]{1}/;
+                            if(pattern.test(panNumber)){
+                                console.log(panNumber);  
+                            } else { 
+                                console.log(panNumber+"(Not validate)");                          
+                            }                            
+
+
+                            //Person Name        
+                            //console.log(lines[indexOLDPANValue+3]);
+                            var personName = lines[indexOLDPANValue+3];
+                            var pattern = /[a-z0-9']+/;
+                            if(pattern.test(personName)){
+                                console.log(personName+" (Not validate)");
+                            } else {
+                                console.log(personName);                               
+                            }                            
+
+                            //Father Name
+                            //console.log(lines[indexOLDPANValue+6]);
+                            var fatherName = lines[indexOLDPANValue+6]  ;
+                            var pattern = /[a-z0-9']+/;
+                            if(pattern.test(fatherName)){
+                                console.log(fatherName+" (Not validate)");
+                            } else {
+                                console.log(fatherName);
+                            }                            
+                            
+                            //DOB
+                            //console.log(lines[indexOLDPANValue+8]);
+                            var dateOfBirth = lines[indexOLDPANValue+8] ;
+                            var pattern = /((3[01]|[12][0-9]|0[1-9])([\/]|[-])(1[0-2]|0[1-9])([\/]|[-])[0-9]{4})/;
+                            if(pattern.test(dateOfBirth)){
+                                console.log(dateOfBirth);
+                            } else {
+                                console.log(dateOfBirth+" (Not validate)");
+                            }                           
+
                             $('#fileupload').prop('disabled', false);
                         } else {
                             $('#fileupload').prop('disabled', false);
